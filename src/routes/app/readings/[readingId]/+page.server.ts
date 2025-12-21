@@ -1,7 +1,7 @@
 import { env as privateEnv } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
 import { createSignedUrlMap } from '$lib/server/storage';
-import { demoCards, makeDemoSignedUrls, pickRandomUniqueWithSeed } from '$lib/demo-cards';
+import { demoBackPool, makeDemoSignedUrls, pickRandomDemoBacksWithSeed } from '$lib/demo-cards';
 
 type ReadingRow = {
 	id: string;
@@ -16,8 +16,12 @@ type ReadingRow = {
 
 export const load = async ({ locals, params, url }) => {
 	if (privateEnv.DEMO_MODE === '1') {
-		const cardCount = Math.max(1, Math.min(demoCards.length, Number(url.searchParams.get('cards')) || 3));
-		const spreadName = url.searchParams.get('spread') || (cardCount === 1 ? '1 carta' : `${cardCount} cartas`);
+		const requestedCount = Number(url.searchParams.get('cards')) || 3;
+		const availableCount = demoBackPool.length;
+		const cardCount = availableCount ? Math.max(1, Math.min(availableCount, requestedCount)) : 0;
+		const spreadName =
+			url.searchParams.get('spread') ||
+			(cardCount === 1 ? '1 carta' : cardCount ? `${cardCount} cartas` : 'Lectura');
 		const positionTitles =
 			cardCount === 1
 				? ['Mensaje']
@@ -25,13 +29,14 @@ export const load = async ({ locals, params, url }) => {
 					? ['Pasado', 'Presente', 'Futuro']
 					: Array.from({ length: cardCount }, (_, idx) => `Carta ${idx + 1}`);
 
-		const selectedCards = pickRandomUniqueWithSeed(demoCards, cardCount, params.readingId);
-		const reading_items = selectedCards.map((card, idx) => {
+		const selectedBacks = pickRandomDemoBacksWithSeed(cardCount, params.readingId);
+		const reading_items = selectedBacks.map((pick, idx) => {
 			return {
 				position_index: idx + 1,
 				snapshot: {
 					position: { title: positionTitles[idx] || `Carta ${idx + 1}` },
-					card
+					card: pick.card,
+					back_image_path: pick.back_image_path
 				}
 			};
 		});

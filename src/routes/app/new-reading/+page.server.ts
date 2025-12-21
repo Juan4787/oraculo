@@ -1,6 +1,6 @@
 import { env as privateEnv } from '$env/dynamic/private';
 import { error, redirect } from '@sveltejs/kit';
-import { demoCards, demoDeck } from '$lib/demo-cards';
+import { demoBackPool, demoDeck } from '$lib/demo-cards';
 
 export const load = async ({ locals, url }) => {
 	if (privateEnv.DEMO_MODE === '1') {
@@ -11,7 +11,7 @@ export const load = async ({ locals, url }) => {
 				{ id: 'spread-3', name: '3 cartas', card_count: 3 }
 			],
 			decks: [{ id: demoDeck.id, name: demoDeck.name }],
-			publishedCardCount: demoCards.length,
+			publishedCardCount: demoBackPool.length,
 			role: 'owner' as const
 		};
 	}

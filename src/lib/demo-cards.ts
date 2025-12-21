@@ -57,6 +57,38 @@ export const demoCards: DemoCard[] = [
 	}
 ];
 
+const demoBackOptions: Record<string, string[]> = {
+	'arcangel-rafael': [
+		'/cards/arcangel-rafael-reverso.png',
+		'/cards/message-rafael-1.png',
+		'/cards/message-rafael-2.png',
+		'/cards/message-rafael-3.png'
+	],
+	'arcangel-gabriel': ['/cards/arcangel-gabriel-reverso.png', '/cards/message-gabriel-1.png'],
+	'arcangel-uriel': [
+		'/cards/arcangel-uriel-reverso.png',
+		'/cards/arcangel-uriel-reverso-2.png',
+		'/cards/message-uriel-1.png',
+		'/cards/message-uriel-2.png'
+	]
+};
+
+function slugFromPath(path: string) {
+	const filename = path.split('/').pop() ?? '';
+	return filename.replace(/\.[^/.]+$/, '');
+}
+
+export type DemoBackPick = {
+	card: DemoCard;
+	back_image_path: string;
+};
+
+export const demoBackPool: DemoBackPick[] = demoCards.flatMap((card) => {
+	const slug = slugFromPath(card.image_path);
+	const options = demoBackOptions[slug] ?? [];
+	return options.map((back_image_path) => ({ card, back_image_path }));
+});
+
 function fnv1a32(input: string) {
 	let hash = 0x811c9dc5;
 	for (let i = 0; i < input.length; i++) {
@@ -90,6 +122,10 @@ export function pickRandomUniqueWithSeed<T>(input: readonly T[], count: number, 
 	}
 
 	return array.slice(0, n);
+}
+
+export function pickRandomDemoBacksWithSeed(count: number, seed: string) {
+	return pickRandomUniqueWithSeed(demoBackPool, count, seed);
 }
 
 export function makeDemoSignedUrls(paths: Array<string | null | undefined>) {

@@ -1,21 +1,24 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 
 	let { data, children } = $props();
 
 	const navBase = [
-		{ href: '/app/new-reading', label: 'Nueva lectura' },
-		{ href: '/app/history', label: 'Historial' }
+		{ href: '/app/new-reading', label: 'Nueva lectura', icon: '📜' },
+		{ href: '/app/history', label: 'Historial', icon: '🗂️' }
 	] as const;
 
 	const isAdmin = $derived.by(() => data.role === 'owner' || data.role === 'staff');
-	const navPeople = $derived.by(() => (isAdmin ? [{ href: '/app/admin/persons', label: 'Perfiles' }] : []));
+	const navPeople = $derived.by(() =>
+		isAdmin ? [{ href: '/app/admin/persons', label: 'Perfiles', icon: '👥' }] : []
+	);
 	const navAll = $derived.by(() => [...navBase, ...navPeople]);
 
 	const isFocus = $derived($page.url.pathname.startsWith('/app/readings/'));
 
-	let theme = $state<'light' | 'dark'>('light');
+	let theme = $state<'light' | 'dark'>('dark');
 	let userMenuOpen = $state(false);
 	const userInitial = $derived((data.user.email ?? 'U').slice(0, 1).toUpperCase());
 
@@ -23,6 +26,7 @@
 		theme = next;
 		if (typeof document !== 'undefined') {
 			document.documentElement.classList.toggle('theme-dark', next === 'dark');
+			document.body?.classList.toggle('theme-dark', next === 'dark');
 			localStorage.setItem('theme', next);
 		}
 	}
@@ -31,9 +35,33 @@
 		const stored = localStorage.getItem('theme');
 		if (stored === 'dark' || stored === 'light') {
 			applyTheme(stored);
-		} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+		} else {
 			applyTheme('dark');
 		}
+	});
+
+	$effect(() => {
+		if (!dev) return;
+		if (!$page.url.searchParams.has('debug')) return;
+
+		queueMicrotask(() => {
+			const themeDarkHtml = document.documentElement.classList.contains('theme-dark');
+			const themeDarkBody = document.body.classList.contains('theme-dark');
+			const ctas = Array.from(document.querySelectorAll<HTMLElement>('.cta-glow')).map((el) => {
+				const styles = getComputedStyle(el);
+				const icon = el.querySelector<HTMLElement>('[aria-hidden=\"true\"]');
+				return {
+					text: el.textContent?.trim() ?? '',
+					className: el.className,
+					color: styles.color,
+					backgroundImage: styles.backgroundImage,
+					backgroundColor: styles.backgroundColor,
+					iconColor: icon ? getComputedStyle(icon).color : null
+				};
+			});
+
+			console.info('[theme-debug]', { themeDarkHtml, themeDarkBody, ctas });
+		});
 	});
 </script>
 
@@ -103,16 +131,17 @@
 	</header>
 
 	<div
-		class="container-app grid grid-cols-1 gap-6 py-6 {data.workspace && !isFocus ? 'md:grid-cols-[220px_1fr]' : ''}"
+		class="container-app grid grid-cols-1 gap-6 py-6 {data.workspace && !isFocus ? 'md:grid-cols-[260px_1fr]' : ''}"
 	>
 		{#if data.workspace && !isFocus}
-			<nav class="surface hidden h-fit p-3 md:block print:hidden">
-				<div class="space-y-1">
+			<nav class="surface sidebar-nav hidden h-fit p-4 md:block print:hidden">
+				<div class="space-y-2">
 					{#each navAll as item}
 						<a
 							class={`nav-link ${String($page.url.pathname) === item.href ? 'nav-link-active' : ''}`}
 							href={item.href}
 						>
+							{#if item.icon}<span aria-hidden="true">{item.icon}</span>{/if}
 							{item.label}
 						</a>
 					{/each}
@@ -125,7 +154,7 @@
 
 	{#if data.workspace && !isFocus}
 		<nav
-			class="fixed inset-x-0 bottom-0 z-40 backdrop-blur print:hidden md:hidden"
+			class="fixed inset-x-0 bottom-0 z-40 backdrop-blur print:hidden md:hidden mobile-nav"
 			style={`padding-bottom: env(safe-area-inset-bottom); background-color: hsl(var(--surface)); border-top: 1px solid hsl(var(--border));`}
 		>
 			<div class="container-app grid gap-2 py-2" style={`grid-template-columns: repeat(${navAll.length}, 1fr);`}>
@@ -134,6 +163,7 @@
 						class={`nav-link text-center text-xs font-medium ${String($page.url.pathname) === item.href ? 'nav-link-active' : ''}`}
 						href={item.href}
 					>
+						{#if item.icon}<span aria-hidden="true">{item.icon}</span>{/if}
 						{item.label}
 					</a>
 				{/each}

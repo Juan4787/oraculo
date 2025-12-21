@@ -13,7 +13,7 @@ type PersonRow = {
 export const load = async ({ locals, url }) => {
 	if (privateEnv.DEMO_MODE === '1') {
 		const q = url.searchParams.get('q')?.trim() ?? '';
-		const persons = getDemoPersons().filter((p) => !q || p.name.toLowerCase().includes(q.toLowerCase()));
+		const persons = getDemoPersons();
 		return { persons, q };
 	}
 
@@ -27,8 +27,6 @@ export const load = async ({ locals, url }) => {
 		.eq('workspace_id', locals.workspaceId)
 		.eq('archived', false)
 		.order('created_at', { ascending: false });
-
-	if (q) query = query.ilike('name', `%${q}%`);
 
 	const { data, error: personsError } = await query.returns<PersonRow[]>();
 	if (personsError) throw error(500, personsError.message);

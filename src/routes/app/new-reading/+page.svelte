@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { dev } from '$app/environment';
+	import { onMount } from 'svelte';
 
 	type Spread = { id: string; name: string; card_count: number };
 type Deck = { id: string; name: string };
@@ -27,6 +29,33 @@ function spreadLabel() {
 
 	$effect(() => {
 		if (!selectedSpreadId && data.spreads.length) selectedSpreadId = data.spreads[0].id;
+	});
+
+	onMount(() => {
+		if (!dev) return;
+		if (!new URLSearchParams(window.location.search).has('debug')) return;
+
+		const titleEl = document.querySelector<HTMLElement>('.spread-card .spread-title');
+		const cardEl = document.querySelector<HTMLElement>('.spread-card');
+		const htmlStyles = getComputedStyle(document.documentElement);
+		const bodyStyles = getComputedStyle(document.body);
+		const textVarHtml = htmlStyles.getPropertyValue('--text').trim();
+		const textVarBody = bodyStyles.getPropertyValue('--text').trim();
+		const themeDarkHtml = document.documentElement.classList.contains('theme-dark');
+		const themeDarkBody = document.body.classList.contains('theme-dark');
+		const titleColor = titleEl ? getComputedStyle(titleEl).color : 'n/a';
+		const cardColor = cardEl ? getComputedStyle(cardEl).color : 'n/a';
+		const ctaEl = document.querySelector<HTMLElement>('.cta-glow');
+		const ctaColor = ctaEl ? getComputedStyle(ctaEl).color : 'n/a';
+		console.info('[spread-color-debug]', {
+			themeDarkHtml,
+			themeDarkBody,
+			textVarHtml,
+			textVarBody,
+			cardColor,
+			titleColor,
+			ctaColor
+		});
 	});
 
 	async function tirar() {
@@ -107,20 +136,34 @@ function spreadLabel() {
 	{/if}
 
 	<div class="mt-6 space-y-6">
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold uppercase tracking-wide text-zinc-500">Elegí tu tirada</h2>
-			<div class="grid gap-3 sm:grid-cols-2">
+			<section class="space-y-4">
+			<h2 class="section-label text-xs font-semibold uppercase tracking-[0.14em]">
+				Elegí tu tirada
+			</h2>
+			<div class="grid gap-4 sm:grid-cols-2">
 				{#each data.spreads as spread}
 					<button
 						type="button"
-						class={`surface p-4 text-left transition duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(59,130,246,0.16)] focus:outline-none ${
-							selectedSpreadId === spread.id ? 'selected-spread' : ''
+						class={`spread-card text-left ${
+							selectedSpreadId === spread.id ? 'spread-card-active' : ''
 						}`}
-						onclick={() => {
-							selectedSpreadId = spread.id;
-						}}
-					>
-						<div class="text-base font-semibold text-zinc-900">{spread.name}</div>
+							onclick={() => {
+								selectedSpreadId = spread.id;
+							}}
+						>
+							<div class="flex items-start justify-between gap-3">
+								<div class="space-y-1">
+								<div class="spread-title">{spread.name}</div>
+								<p class="spread-meta">
+									{spread.card_count === 1 ? 'Rápida y directa' : 'Profunda y desarrollada'}
+								</p>
+							</div>
+							<div class="mini-preview" aria-hidden="true">
+								{#each Array(spread.card_count) as _, idx}
+									<span style={`--i:${idx};`}></span>
+								{/each}
+							</div>
+						</div>
 					</button>
 				{/each}
 			</div>
@@ -160,7 +203,22 @@ function spreadLabel() {
 		</div>
 	{/if}
 
-	<div class="sticky bottom-24 mt-8 rounded-2xl bg-zinc-50/80 pb-[env(safe-area-inset-bottom)] pt-3 backdrop-blur md:bottom-0">
+	<div class="mt-10 grid gap-6 md:grid-cols-[2fr_1fr]">
+		<div class="surface p-5 space-y-3">
+			<div class="section-label text-xs uppercase tracking-[0.14em]">Cómo funciona</div>
+			<p class="section-body text-sm leading-relaxed">
+				Elegí tu tirada, opcionalmente un mazo, y tocá “Tirar”. Revelá la carta cuando estés lista: el reverso es único para cada arcángel.
+			</p>
+		</div>
+		<div class="surface p-5 space-y-3">
+			<div class="section-label text-xs uppercase tracking-[0.14em]">Última lectura</div>
+			<p class="section-body text-sm leading-relaxed">
+				Guardá tus tiradas en Historial para consultarlas rápido y repetir la dinámica cuando quieras.
+			</p>
+		</div>
+	</div>
+
+	<div class="sticky bottom-24 mt-8 rounded-2xl bg-[hsla(var(--surface)/0.75)] pb-[env(safe-area-inset-bottom)] pt-3 backdrop-blur md:bottom-0">
 		<button
 			class="cta-glow w-full rounded-2xl bg-zinc-900 px-5 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 disabled:opacity-60"
 			disabled={loading || data.publishedCardCount === 0 || !selectedSpreadId}

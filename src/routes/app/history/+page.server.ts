@@ -1,7 +1,7 @@
 import { env as privateEnv } from '$env/dynamic/private';
 import { error, redirect } from '@sveltejs/kit';
 import { createSignedUrlMap } from '$lib/server/storage';
-import { demoCards, makeDemoSignedUrls, pickRandomUniqueWithSeed } from '$lib/demo-cards';
+import { demoBackPool, makeDemoSignedUrls, pickRandomDemoBacksWithSeed } from '$lib/demo-cards';
 
 type ReadingListRow = {
 	id: string;
@@ -12,12 +12,20 @@ type ReadingListRow = {
 
 export const load = async ({ locals, url }) => {
 	if (privateEnv.DEMO_MODE === '1') {
-		const cardCount = Math.max(1, Math.min(3, demoCards.length));
+		const availableCount = demoBackPool.length;
+		const cardCount = availableCount ? Math.min(3, availableCount) : 0;
 		const readingId = crypto.randomUUID();
-		const preview = pickRandomUniqueWithSeed(demoCards, cardCount, readingId);
-		const reading_items = preview.map((card, idx) => ({
+		const preview = pickRandomDemoBacksWithSeed(cardCount, readingId);
+		const reading_items = preview.map((pick, idx) => ({
 			position_index: idx + 1,
-			snapshot: { card: { name: card.name, short_message: card.short_message, image_path: card.image_path } }
+			snapshot: {
+				card: {
+					name: pick.card.name,
+					short_message: pick.card.short_message,
+					image_path: pick.card.image_path
+				},
+				back_image_path: pick.back_image_path
+			}
 		}));
 		const signedUrls = makeDemoSignedUrls(reading_items.map((it) => it.snapshot?.card?.image_path ?? null));
 

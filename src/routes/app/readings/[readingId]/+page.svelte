@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
+	import { onDestroy } from 'svelte';
 	type Reading = {
 		id: string;
 		created_at: string;
@@ -131,6 +133,8 @@
 	});
 
 	function backImageFor(item: (typeof items)[number] | undefined) {
+		const explicit = item?.snapshot?.back_image_path;
+		if (typeof explicit === 'string' && explicit.trim()) return explicit;
 		const slug = detectArcangel(item);
 		if (slug) {
 			const assigned = item?.position_index ? assignedBacks[item.position_index] : null;
@@ -176,6 +180,32 @@
 		);
 	}
 
+	function frontImageFor(item: (typeof items)[number] | undefined) {
+		const path = item?.snapshot?.card?.image_path;
+		if (path && data.signedUrls[path]) return data.signedUrls[path];
+		const slug = detectArcangel(item);
+		if (slug) return `/cards/${ensureArcangelPrefix(slug.replace(/^arcangel-/, ''))}.png`;
+		return makePlaceholder(`Carta ${item?.position_index ?? current + 1}`);
+	}
+
+	function preloadImage(url: string) {
+		if (!url || url.startsWith('data:') || preloadedImages.has(url)) return;
+		const img = new Image();
+		img.decoding = 'async';
+		img.loading = 'eager';
+		img.src = url;
+		img.decode?.().catch(() => {});
+		preloadedImages.add(url);
+	}
+
+	function preloadCard(index: number) {
+		if (!items.length) return;
+		const safeIndex = ((index % items.length) + items.length) % items.length;
+		const item = items[safeIndex];
+		preloadImage(frontImageFor(item));
+		preloadImage(backImageFor(item));
+	}
+
 	let current = $state(0);
 	let direction = $state<1 | -1>(1);
 	let flipState = $state<'idle' | 'out' | 'in'>('idle');
@@ -185,6 +215,32 @@
 	let backStatus = $state<'idle' | 'ok' | 'error'>('idle');
 
 	let imageError = $state(false);
+	let fireState = $state<'off' | 'rise' | 'retract' | 'glow'>('off');
+	let fireTimers: Array<ReturnType<typeof setTimeout>> = [];
+	const preloadedImages = new Set<string>();
+	let didPreloadAll = $state(false);
+
+	function clearFireTimers() {
+		fireTimers.forEach((timer) => clearTimeout(timer));
+		fireTimers = [];
+	}
+
+	function startFireSequence(startDelay = 0) {
+		clearFireTimers();
+		fireState = 'off';
+
+		const pause = Math.max(0, startDelay);
+		const rise = 900;
+		const retract = 700;
+		const glow = 2200;
+
+		fireTimers.push(setTimeout(() => (fireState = 'rise'), pause));
+		fireTimers.push(setTimeout(() => (fireState = 'retract'), pause + rise));
+		fireTimers.push(setTimeout(() => (fireState = 'glow'), pause + rise + retract));
+		fireTimers.push(setTimeout(() => (fireState = 'off'), pause + rise + retract + glow));
+
+		return pause + rise;
+	}
 
 	// Reset error when card changes
 	$effect(() => {
@@ -192,20 +248,17 @@
 		imageError = false;
 		frontStatus = 'idle';
 		backStatus = 'idle';
+		clearFireTimers();
+		fireState = 'off';
 	});
 
-const currentKey = $derived.by(() => items[current]?.position_index ?? current);
-const isRevealed = $derived.by(() => Boolean(revealed[currentKey]));
-const backImageUrl = $derived.by(() => backImageFor(items[current]));
-// Mostrar anverso al inicio; al revelar, girar al reverso (usa imagen si existe o fallback de texto).
-const showBack = $derived.by(() => isRevealed);
-	const frontImageUrl = $derived.by(() => {
-		const path = items[current]?.snapshot?.card?.image_path;
-		if (path && data.signedUrls[path]) return data.signedUrls[path];
-		const slug = detectArcangel(items[current]);
-		if (slug) return `/cards/${ensureArcangelPrefix(slug.replace(/^arcangel-/, ''))}.png`;
-		return makePlaceholder(`Carta ${items[current]?.position_index ?? current + 1}`);
-	});
+	const currentKey = $derived.by(() => items[current]?.position_index ?? current);
+	const isRevealed = $derived.by(() => Boolean(revealed[currentKey]));
+	const backImageUrl = $derived.by(() => backImageFor(items[current]));
+	// Mostrar anverso al inicio; al revelar, girar al reverso (usa imagen si existe o fallback de texto).
+	const showBack = $derived.by(() => isRevealed);
+	const fireClass = $derived.by(() => (fireState === 'off' ? '' : fireState));
+	const frontImageUrl = $derived.by(() => frontImageFor(items[current]));
 
 	function positionTitle(item: (typeof items)[number] | undefined) {
 		return item?.snapshot?.position?.title ?? (item ? `Carta ${item.position_index}` : '');
@@ -221,8 +274,12 @@ const showBack = $derived.by(() => isRevealed);
 	});
 
 	function revealCard() {
+		if (isRevealed) return;
 		const key = currentKey;
 		revealed = { ...revealed, [key]: true };
+		const flipDuration = 420;
+		const postFlipPause = 240;
+		startFireSequence(flipDuration + postFlipPause);
 	}
 
 	function hideCard() {
@@ -230,10 +287,14 @@ const showBack = $derived.by(() => isRevealed);
 		const next = { ...revealed };
 		delete next[key];
 		revealed = next;
+		clearFireTimers();
+		fireState = 'off';
 	}
 
 	function prev() {
 		if (!items.length || isFlipping) return;
+		clearFireTimers();
+		fireState = 'off';
 		direction = -1;
 		flipState = 'out';
 		setTimeout(() => {
@@ -245,6 +306,8 @@ const showBack = $derived.by(() => isRevealed);
 
 	function next() {
 		if (!items.length || isFlipping) return;
+		clearFireTimers();
+		fireState = 'off';
 		direction = 1;
 		flipState = 'out';
 		setTimeout(() => {
@@ -253,6 +316,36 @@ const showBack = $derived.by(() => isRevealed);
 			setTimeout(() => (flipState = 'idle'), 220);
 		}, 200);
 	}
+
+	$effect(() => {
+		const _ = current; // dependency
+		if (!browser || !items.length) return;
+
+		const timeout = window.setTimeout(() => {
+			preloadCard(current);
+			preloadCard(current + 1);
+			preloadCard(current - 1);
+		}, 0);
+
+		return () => window.clearTimeout(timeout);
+	});
+
+	$effect(() => {
+		const count = items.length;
+		if (!browser || !count || didPreloadAll) return;
+		didPreloadAll = true;
+		const timeout = window.setTimeout(() => {
+			for (let i = 0; i < count; i += 1) {
+				preloadCard(i);
+			}
+		}, 0);
+
+		return () => window.clearTimeout(timeout);
+	});
+
+	onDestroy(() => {
+		clearFireTimers();
+	});
 </script>
 
 <section class="surface p-6 sm:p-8">
@@ -272,7 +365,7 @@ const showBack = $derived.by(() => isRevealed);
 					class="btn-back"
 					href={backHref}
 				>
-					Volver al historial
+					Volver
 				</a>
 				<a
 					class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
@@ -348,6 +441,7 @@ const showBack = $derived.by(() => isRevealed);
 									: ''}`}
 						>
 							<div class="card-stage">
+								<div class={`card-fire ${fireClass}`} aria-hidden="true"></div>
 								<div class={`card-3d ${showBack ? 'is-revealed' : ''}`}>
 									<div class="card-face card-front">
 										{#if frontStatus === 'error'}
@@ -360,6 +454,7 @@ const showBack = $derived.by(() => isRevealed);
 												alt="Carta"
 												src={frontImageUrl}
 												loading="lazy"
+												decoding="async"
 												onerror={() => {
 													console.warn('Front image error', frontImageUrl);
 													frontStatus = 'error';
@@ -388,6 +483,7 @@ const showBack = $derived.by(() => isRevealed);
 													alt="Reverso de la carta"
 													src={backImageUrl}
 													loading="lazy"
+													decoding="async"
 													onerror={() => {
 														console.warn('Back image error', backImageUrl);
 														backStatus = 'error';

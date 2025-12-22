@@ -12,6 +12,16 @@ begin
 	end if;
 end $$;
 
+-- Supabase SQL editor no siempre puede cambiar ownership a un rol nuevo si no es miembro.
+-- Otorgamos membresía al rol admin conocido (postgres / supabase_admin) para evitar el error.
+-- Deshabilitado por ahora; dejar comentado por si se necesita en el futuro.
+-- do $$
+-- begin
+-- 	if exists (select 1 from pg_roles where rolname = 'postgres') then
+-- 		execute 'grant oracle_backend to postgres';
+-- 	end if;
+-- end $$;
+
 -- Enums
 do $$
 begin
@@ -600,6 +610,7 @@ drop policy if exists decks_write_admin on public.decks;
 create policy decks_write_admin
 on public.decks
 for insert, update, delete
+-- for all
 to authenticated, oracle_backend
 using (
 	exists (
@@ -640,6 +651,7 @@ drop policy if exists cards_write_admin on public.cards;
 create policy cards_write_admin
 on public.cards
 for insert, update, delete
+-- for all
 to authenticated, oracle_backend
 using (
 	exists (
@@ -680,6 +692,7 @@ drop policy if exists spreads_write_admin on public.spreads;
 create policy spreads_write_admin
 on public.spreads
 for insert, update, delete
+-- for all
 to authenticated, oracle_backend
 using (
 	exists (
@@ -720,6 +733,7 @@ drop policy if exists spread_positions_write_admin on public.spread_positions;
 create policy spread_positions_write_admin
 on public.spread_positions
 for insert, update, delete
+-- for all
 to authenticated, oracle_backend
 using (
 	exists (

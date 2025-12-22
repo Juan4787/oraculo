@@ -1,104 +1,113 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { supabase } from '$lib/supabase/client';
+	import { enhance } from '$app/forms';
 
-	let email = $state('');
-	let password = $state('');
-	let mode = $state<'signin' | 'signup'>('signin');
-	let loading = $state(false);
-	let error = $state<string | null>(null);
+	let { form } = $props();
 
-	async function submit() {
-		loading = true;
-		error = null;
+	let showPassword = $state(false);
+	let mode = $state<'signin' | 'signup'>(form?.intent === 'register' ? 'signup' : 'signin');
 
-		try {
-			if (mode === 'signup') {
-				const { error: signUpError } = await supabase.auth.signUp({ email, password });
-				if (signUpError) throw signUpError;
-			} else {
-				const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-				if (signInError) throw signInError;
-			}
-
-			await goto('/app');
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'No se pudo iniciar sesión.';
-		} finally {
-			loading = false;
-		}
-	}
+	$effect(() => {
+		if (form?.intent === 'register') mode = 'signup';
+		if (form?.intent === 'login') mode = 'signin';
+	});
 </script>
 
 <main class="container-app flex min-h-dvh items-center justify-center py-10">
 	<section class="surface w-full max-w-md p-6 sm:p-8">
-		<header class="space-y-2">
-			<h1 class="text-2xl font-semibold tracking-tight">Entrar</h1>
-			<p class="text-sm text-zinc-600">Accedé a tu oráculo y a tu historial privado.</p>
+		<header class="space-y-2 text-center">
+			<p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Acceso seguro</p>
+			<h1 class="text-2xl font-semibold tracking-tight">Entrá a tu oráculo</h1>
+			<p class="text-sm text-zinc-600">Solo los emails habilitados pueden crear cuenta.</p>
 		</header>
 
+		<div class="mt-6 flex items-center justify-center">
+			<div class="flex rounded-full border border-zinc-200 bg-zinc-50 p-1 text-xs font-semibold text-zinc-500">
+				<button
+					type="button"
+					class={`rounded-full px-4 py-2 transition ${mode === 'signin' ? 'bg-zinc-900 text-white shadow-sm' : 'hover:text-zinc-900'}`}
+					onclick={() => (mode = 'signin')}
+				>
+					Ingresar
+				</button>
+				<button
+					type="button"
+					class={`rounded-full px-4 py-2 transition ${mode === 'signup' ? 'bg-zinc-900 text-white shadow-sm' : 'hover:text-zinc-900'}`}
+					onclick={() => (mode = 'signup')}
+				>
+					Crear cuenta
+				</button>
+			</div>
+		</div>
+
 		<form
+			method="post"
+			action={mode === 'signup' ? '?/register' : '?/login'}
+			use:enhance
 			class="mt-6 space-y-4"
-			onsubmit={(e) => {
-				e.preventDefault();
-				void submit();
-			}}
 		>
 			<div class="space-y-2">
 				<label class="text-sm font-medium text-zinc-800" for="email">Email</label>
 				<input
 					id="email"
+					name="email"
 					class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
 					type="email"
 					autocomplete="email"
 					required
-					bind:value={email}
+					value={form?.email ?? ''}
 				/>
 			</div>
 
 			<div class="space-y-2">
 				<label class="text-sm font-medium text-zinc-800" for="password">Contraseña</label>
-				<input
-					id="password"
-					class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-					type="password"
-					autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
-					minlength="6"
-					required
-					bind:value={password}
-				/>
+				<div class="relative">
+					<input
+						id="password"
+						name="password"
+						class="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 pr-16 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+						type={showPassword ? 'text' : 'password'}
+						autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
+						minlength="6"
+						required
+					/>
+					<button
+						class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-semibold text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+						type="button"
+						onclick={() => (showPassword = !showPassword)}
+					>
+						{showPassword ? 'Ocultar' : 'Ver'}
+					</button>
+				</div>
 			</div>
 
-			{#if error}
+			{#if form?.message}
 				<div class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-					{error}
+					{form.message}
 				</div>
 			{/if}
 
 			<button
-				class="w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-soft outline-none transition hover:bg-zinc-800 focus:ring-2 focus:ring-zinc-900/20 disabled:opacity-60"
-				disabled={loading}
+				class="cta-glow w-full rounded-xl px-4 py-2.5 text-sm font-semibold shadow-soft outline-none transition focus:ring-2 focus:ring-zinc-900/20"
 				type="submit"
 			>
-				{loading ? 'Ingresando…' : mode === 'signup' ? 'Crear cuenta' : 'Iniciar sesión'}
+				{mode === 'signup' ? 'Crear cuenta' : 'Ingresar'}
 			</button>
+
+			{#if mode === 'signin'}
+				<div class="text-right text-sm text-zinc-600">
+					<a class="font-semibold hover:underline" href="/reset">¿Olvidaste tu contraseña?</a>
+				</div>
+			{:else}
+				<div class="text-right text-sm text-zinc-600">
+					<button
+						type="button"
+						class="font-semibold hover:underline"
+						onclick={() => (mode = 'signin')}
+					>
+						¿Ya tenés cuenta? Entrá
+					</button>
+				</div>
+			{/if}
 		</form>
-
-		<div class="mt-5 flex items-center justify-between text-sm">
-			<button
-				class="text-zinc-600 underline-offset-4 hover:text-zinc-900 hover:underline"
-				type="button"
-				onclick={() => {
-					mode = mode === 'signin' ? 'signup' : 'signin';
-					error = null;
-				}}
-			>
-				{mode === 'signin' ? '¿No tenés cuenta? Creala' : '¿Ya tenés cuenta? Entrá'}
-			</button>
-
-			<a class="text-zinc-600 underline-offset-4 hover:text-zinc-900 hover:underline" href="/">
-				Inicio
-			</a>
-		</div>
 	</section>
 </main>

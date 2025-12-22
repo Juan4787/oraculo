@@ -14,7 +14,7 @@
 	const navPeople = $derived.by(() =>
 		isAdmin ? [{ href: '/app/admin/persons', label: 'Perfiles', icon: '👥' }] : []
 	);
-	const navAll = $derived.by(() => [...navBase, ...navPeople]);
+			const navAll = $derived.by(() => [...navBase, ...navPeople]);
 
 	const isFocus = $derived($page.url.pathname.startsWith('/app/readings/'));
 
@@ -108,6 +108,15 @@
 							onkeydown={(e) => e.key === 'Enter' && (userMenuOpen = false)}
 						></div>
 						<div class="absolute right-0 z-50 mt-2 w-48 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg dark:border-[color:hsl(var(--border))] dark:bg-[color:hsl(var(--surface))]">
+							{#if data.isMaster}
+								<a
+									class="block rounded-lg px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:text-[color:hsl(var(--text))]"
+									href="/app/master"
+									onclick={() => (userMenuOpen = false)}
+								>
+									Panel maestro
+								</a>
+							{/if}
 							{#if isAdmin}
 								<a
 									class="block rounded-lg px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:text-[color:hsl(var(--text))]"

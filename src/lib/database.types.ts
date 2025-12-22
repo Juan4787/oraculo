@@ -48,6 +48,30 @@ export type Database = {
 				};
 				Relationships: [];
 			};
+			allowed_emails: {
+				Row: {
+					id: string;
+					email: string;
+					enabled: boolean;
+					created_at: string;
+					updated_at: string;
+				};
+				Insert: {
+					id?: string;
+					email: string;
+					enabled?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Update: {
+					id?: string;
+					email?: string;
+					enabled?: boolean;
+					created_at?: string;
+					updated_at?: string;
+				};
+				Relationships: [];
+			};
 			decks: {
 				Row: {
 					id: string;
@@ -299,6 +323,10 @@ export type Database = {
 				};
 				Returns: { reading_id: string }[];
 			};
+			is_email_enabled: {
+				Args: { p_email: string };
+				Returns: boolean;
+			};
 		};
 		Enums: {
 			workspace_role: 'owner' | 'staff' | 'client';
@@ -308,4 +336,3 @@ export type Database = {
 		CompositeTypes: Record<string, never>;
 	};
 };
-

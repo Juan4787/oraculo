@@ -59,7 +59,7 @@ function formatDate(dateStr: string) {
 			</a>
 			<button
 				type="button"
-				class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-white hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-white"
+				class="inline-flex items-center justify-center rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-white"
 				onclick={() => (showDeleteConfirm = true)}
 			>
 				Eliminar

@@ -67,36 +67,44 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 			if (error) throw error;
 
+			// Workspace global donde están las cartas - todos los usuarios se agregan aquí automáticamente
+			const GLOBAL_WORKSPACE_ID = 'a32bedf6-169b-4453-9772-624f46679e06';
+			
 			const isMasterRoute = event.url.pathname.startsWith('/app/master');
-			if (!memberships?.length && !isMasterRoute) {
+			const isInGlobalWorkspace = memberships?.some((m) => m.workspace_id === GLOBAL_WORKSPACE_ID);
+			
+			// Si el usuario no está en el workspace global, agregarlo
+			if (!isInGlobalWorkspace && !isMasterRoute) {
 				const admin = getSupabaseAdminClient();
-				const { data: workspace, error: workspaceError } = await admin
+				
+				// Obtener info del workspace global
+				const { data: globalWorkspace } = await admin
 					.from('workspaces')
-					.insert({ name: 'Oráculo' })
 					.select('id, name, slug')
+					.eq('id', GLOBAL_WORKSPACE_ID)
 					.single();
+				
+				if (globalWorkspace) {
+					// Agregar usuario al workspace global como client
+					await admin.from('workspace_members').upsert({
+						workspace_id: GLOBAL_WORKSPACE_ID,
+						user_id: user.id,
+						role: 'client'
+					}, { onConflict: 'workspace_id,user_id' });
 
-				if (workspaceError || !workspace) {
-					throw workspaceError ?? new Error('No se pudo crear el workspace.');
+					// Agregar a la lista de memberships
+					memberships = memberships ?? [];
+					memberships.push({
+						workspace_id: GLOBAL_WORKSPACE_ID,
+						role: 'client',
+						workspaces: globalWorkspace
+					});
 				}
-
-				const { error: memberError } = await admin.from('workspace_members').insert({
-					workspace_id: workspace.id,
-					user_id: user.id,
-					role: 'owner'
-				});
-
-				if (memberError) throw memberError;
-
-				memberships = [
-					{
-						workspace_id: workspace.id,
-						role: 'owner',
-						workspaces: workspace
-					}
-				];
-
-				event.cookies.set('active_workspace_id', workspace.id, {
+			}
+			
+			// Forzar siempre el workspace global como activo
+			if (isInGlobalWorkspace || memberships?.some((m) => m.workspace_id === GLOBAL_WORKSPACE_ID)) {
+				event.cookies.set('active_workspace_id', GLOBAL_WORKSPACE_ID, {
 					path: '/',
 					sameSite: 'lax'
 				});

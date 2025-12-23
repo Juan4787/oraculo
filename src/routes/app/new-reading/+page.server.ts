@@ -16,7 +16,7 @@ export const load = async ({ locals, url }) => {
 		};
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const personId = url.searchParams.get('personId');
 	const isAdmin = locals.workspaceRole === 'owner' || locals.workspaceRole === 'staff';

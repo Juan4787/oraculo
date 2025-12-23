@@ -42,7 +42,7 @@ export const load = async ({ locals }) => {
 		return { decks: [{ id: demoDeck.id, name: demoDeck.name }], cards, signedUrls };
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const { data: decks, error: decksError } = await locals.supabase
 		.from('decks')
@@ -78,7 +78,7 @@ export const actions = {
 			return fail(400, { message: 'Modo demo: no se guardan cartas.' });
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 
 		const form = await request.formData();
 
@@ -131,7 +131,7 @@ export const actions = {
 			return fail(400, { message: 'Modo demo: no se guardan cambios.' });
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 
 		const form = await request.formData();
 		const cardId = String(form.get('card_id') ?? '').trim();

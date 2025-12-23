@@ -18,14 +18,19 @@
 	let confirmAction = $state<null | { type: 'disable' | 'delete'; id: string; email: string }>(null);
 	let confirmInput = $state('');
 
-	const filteredEmails = $derived.by(() => {
-		const needle = query.trim().toLowerCase();
-		if (!needle) return data.emails;
-		return data.emails.filter((item) => item.email.toLowerCase().includes(needle));
+	const visibleEmails = $derived.by(() => {
+		const master = data.masterEmail?.toLowerCase() ?? '';
+		return data.emails.filter((item) => item.email.toLowerCase() !== master);
 	});
 
-	const enabledCount = $derived.by(() => data.emails.filter((item) => item.enabled).length);
-	const disabledCount = $derived.by(() => data.emails.length - enabledCount);
+	const filteredEmails = $derived.by(() => {
+		const needle = query.trim().toLowerCase();
+		if (!needle) return visibleEmails;
+		return visibleEmails.filter((item) => item.email.toLowerCase().includes(needle));
+	});
+
+	const enabledCount = $derived.by(() => visibleEmails.filter((item) => item.enabled).length);
+	const disabledCount = $derived.by(() => visibleEmails.length - enabledCount);
 
 	$effect(() => {
 		if (confirmAction) confirmInput = '';
@@ -39,15 +44,16 @@
 </script>
 
 <section class="surface p-6 sm:p-8">
-	<header class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-		<div class="space-y-3">
+	<header class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+		<div class="space-y-6">
 			<a class="btn-back" href="/app/new-reading">
 				<span aria-hidden="true">←</span> Volver
 			</a>
-			<div>
-				<p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Panel maestro</p>
-				<h1 class="text-2xl font-semibold tracking-tight">Control de accesos</h1>
-				<p class="text-sm text-zinc-600">
+			<div class="space-y-4">
+				<h1 class="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+					Control de accesos
+				</h1>
+				<p class="text-sm text-zinc-300 sm:text-base">
 					Habilitá o deshabilitá emails para que puedan crear cuenta.
 				</p>
 			</div>
@@ -61,7 +67,6 @@
 	<div class="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
 		<div class="surface p-5">
 			<h2 class="text-lg font-semibold text-zinc-900">Habilitar nuevo email</h2>
-			<p class="mt-1 text-sm text-zinc-600">Pegá el email y listo. Se habilita automáticamente.</p>
 			<form class="mt-4 space-y-3" method="post" action="?/add_email" use:enhance>
 				<div class="space-y-2">
 					<label class="text-sm font-medium text-zinc-800" for="email">Email a habilitar</label>

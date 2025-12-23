@@ -34,7 +34,7 @@ export const load = async ({ locals, params }) => {
 		};
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const { data: person, error: personError } = await locals.supabase
 		.from('persons')
@@ -86,7 +86,7 @@ export const actions = {
 			return { ok: true };
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 		const form = await request.formData();
 
 		const name = String(form.get('name') ?? '').trim();
@@ -116,7 +116,7 @@ export const actions = {
 			redirect(303, '/app/admin/persons');
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 
 		const { error: archiveError } = await locals.supabase
 			.from('persons')

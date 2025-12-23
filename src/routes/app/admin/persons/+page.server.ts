@@ -17,7 +17,7 @@ export const load = async ({ locals, url }) => {
 		return { persons, q };
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const q = url.searchParams.get('q')?.trim() ?? '';
 

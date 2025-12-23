@@ -31,42 +31,23 @@ Luego abrí `http://localhost:5175`.
 
 ## 4) Supabase (SQL + buckets + RLS)
 
-Ejecutá el SQL de `supabase/migrations/2025-12-15_0001_init.sql` en el SQL Editor de Supabase.
+Ejecutá los SQL de:
+- `supabase/migrations/2025-12-15_0001_init.sql`
+- `supabase/migrations/2025-12-16_0002_allowed_emails.sql`
+- `supabase/migrations/2025-12-23_0003_remove_access_codes.sql`
 
 Después:
-1. Creá un workspace (esto auto-crea las tiradas 1/3 cartas):
+1. (Opcional) Creá un workspace manual si querés personalizar el nombre. Si no, se crea
+automáticamente en el primer login.
 
 ```sql
-insert into public.workspaces (name, slug)
-values ('Mi Oráculo', 'mi-oraculo')
+insert into public.workspaces (name)
+values ('Mi Oráculo')
 returning id;
 ```
 
-2. Creá códigos de acceso (uno `owner` y uno `client`):
-
-```sql
--- OWNER (1 uso)
-insert into public.workspace_access_codes (workspace_id, code_hash, role, max_uses)
-values (
-  '<WORKSPACE_ID>',
-  public.hash_access_code('OWNER-1234'),
-  'owner',
-  1
-);
-
--- CLIENT (ilimitado)
-insert into public.workspace_access_codes (workspace_id, code_hash, role, max_uses)
-values (
-  '<WORKSPACE_ID>',
-  public.hash_access_code('CLIENT-1234'),
-  'client',
-  null
-);
-```
-
-3. En la app:
-   - Registrate / logueate
-   - En `/app/join` ingresá `OWNER-1234` (para la creadora) o `CLIENT-1234` (usuario final)
+2. En la app:
+   - Registrate / logueate y empezás a usarla directamente
 
 ## 5) Storage
 - Bucket `card_images` (privado) para imágenes de cartas.

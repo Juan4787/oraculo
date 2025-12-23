@@ -32,7 +32,7 @@ export const load = async ({ locals }) => {
 		};
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const { data: spreads, error: spreadsError } = await locals.supabase
 		.from('spreads')

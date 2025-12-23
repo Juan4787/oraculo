@@ -22,7 +22,7 @@ export const actions = {
 			redirect(303, `/app/admin/persons/${person.id}`);
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 
 		const { user } = await locals.safeGetSession();
 		if (!user) redirect(303, '/login');

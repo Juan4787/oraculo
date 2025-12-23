@@ -14,7 +14,7 @@ export const load = async ({ locals }) => {
 		return { decks: [] };
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const { data: decks, error: decksError } = await locals.supabase
 		.from('decks')
@@ -34,7 +34,7 @@ export const actions = {
 			return fail(400, { message: 'Modo demo: no se guardan mazos.' });
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 
 		const form = await request.formData();
 		const name = String(form.get('name') ?? '').trim();
@@ -58,7 +58,7 @@ export const actions = {
 			return fail(400, { message: 'Modo demo: no se guardan cambios.' });
 		}
 
-		if (!locals.workspaceId) redirect(303, '/app/join');
+		if (!locals.workspaceId) redirect(303, '/app');
 
 		const form = await request.formData();
 		const deckId = String(form.get('deck_id') ?? '').trim();

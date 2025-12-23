@@ -46,7 +46,7 @@ export const load = async ({ locals, url }) => {
 		};
 	}
 
-	if (!locals.workspaceId) redirect(303, '/app/join');
+	if (!locals.workspaceId) redirect(303, '/app');
 
 	const before = url.searchParams.get('before');
 	const limit = 20;

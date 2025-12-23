@@ -207,16 +207,12 @@ function ownerLabel(reading: Reading) {
 									<span class="history-pill">{spreadLabel(reading)}</span>
 									<span class="history-dot">•</span>
 									<span>{dtf.format(new Date(reading.created_at))}</span>
-									<span class="history-dot">•</span>
-									<span class="font-medium">{ownerLabel(reading)}</span>
 								</div>
 								<div class="history-title">
-									{summaryTitles(reading) || 'Lectura sin título'}
+									{ownerLabel(reading)}
 								</div>
 								<div class="history-meta">
 									<span>{cardCount(reading) === 1 ? 'Lectura rápida' : 'Lectura profunda'}</span>
-									<span class="history-dot">•</span>
-									<span>{cardCount(reading)} carta{cardCount(reading) === 1 ? '' : 's'}</span>
 								</div>
 									</div>
 									<div class="history-thumbs" aria-hidden="true">
@@ -237,12 +233,7 @@ function ownerLabel(reading: Reading) {
 								</div>
 
 								<div class="history-footer">
-									<div class="flex flex-wrap items-center gap-2">
-										<span class="tag-pill muted">{reading.spreads?.name ?? 'Lectura'}</span>
-										{#if summaryTitles(reading)}
-											<span class="tag-pill">{cardCount(reading)} carta{cardCount(reading) === 1 ? '' : 's'}</span>
-										{/if}
-									</div>
+									<div></div>
 									<div class="flex items-center gap-2">
 										<a
 											class="ghost-button"
@@ -251,13 +242,7 @@ function ownerLabel(reading: Reading) {
 										>
 											Abrir
 										</a>
-										<details class="action-menu" onclick={(event) => event.stopPropagation()}>
-											<summary aria-label="Más acciones">⋯</summary>
-											<div class="action-menu-panel">
-												<a href={`/app/readings/${reading.id}?from=history`}>Ver lectura</a>
-												<a href="/app/new-reading">Repetir tirada</a>
-											</div>
-										</details>
+
 									</div>
 								</div>
 							</div>

@@ -18,14 +18,14 @@
 	let confirmAction = $state<null | { type: 'disable' | 'delete'; id: string; email: string }>(null);
 	let confirmInput = $state('');
 
-	const filteredEmails = $derived(() => {
+	const filteredEmails = $derived.by(() => {
 		const needle = query.trim().toLowerCase();
 		if (!needle) return data.emails;
 		return data.emails.filter((item) => item.email.toLowerCase().includes(needle));
 	});
 
-	const enabledCount = $derived(() => data.emails.filter((item) => item.enabled).length);
-	const disabledCount = $derived(() => data.emails.length - enabledCount);
+	const enabledCount = $derived.by(() => data.emails.filter((item) => item.enabled).length);
+	const disabledCount = $derived.by(() => data.emails.length - enabledCount);
 
 	$effect(() => {
 		if (confirmAction) confirmInput = '';

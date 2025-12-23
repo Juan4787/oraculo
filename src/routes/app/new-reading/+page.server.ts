@@ -15,26 +15,37 @@ export const load = async ({ locals, url }) => {
 		};
 	}
 
+	const { user } = await locals.safeGetSession();
+	if (!user) redirect(303, '/login');
 	if (!locals.workspaceId) redirect(303, '/app');
 
 	const personId = url.searchParams.get('personId');
 	const isAdmin = locals.workspaceRole === 'owner' || locals.workspaceRole === 'staff';
 
+	console.log('[new-reading] personId from URL:', personId, 'user:', user.id);
+
 	let person: { id: string; name: string } | null = null;
 	if (personId) {
-		if (!isAdmin) redirect(303, '/app');
-
+		// Allow users to create readings for their own profiles
 		const { data, error: personError } = await locals.supabase
 			.from('persons')
-			.select('id, name')
+			.select('id, name, created_by_user_id')
 			.eq('id', personId)
 			.eq('workspace_id', locals.workspaceId)
 			.eq('archived', false)
 			.maybeSingle();
 
+		console.log('[new-reading] Person lookup result:', data?.name ?? 'NOT FOUND', 'created_by:', data?.created_by_user_id);
+
 		if (personError) throw error(500, personError.message);
 		if (!data) throw error(404, 'Persona no encontrada');
-		person = data;
+		
+		// Check if user owns this profile or is admin
+		const isOwner = data.created_by_user_id === user.id;
+		console.log('[new-reading] isOwner:', isOwner, 'isAdmin:', isAdmin);
+		if (!isOwner && !isAdmin) redirect(303, '/app');
+		
+		person = { id: data.id, name: data.name };
 	}
 
 	const { data: spreads, error: spreadsError } = await locals.supabase

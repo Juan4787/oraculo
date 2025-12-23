@@ -13,7 +13,7 @@
 	};
 
 	let { data } = $props<{
-		data: { reading: Reading; signedUrls: Record<string, string>; fresh: boolean };
+		data: { reading: Reading; signedUrls: Record<string, string>; fresh: boolean; from: string | null };
 	}>();
 
 	const dtf = new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium', timeStyle: 'short' });
@@ -23,11 +23,16 @@
 			.sort((a, b) => a.position_index - b.position_index)
 	);
 
-	const backHref = $derived.by(() =>
-		data.reading.owner_type === 'person' && data.reading.owner_person_id
-			? `/app/admin/persons/${data.reading.owner_person_id}`
-			: '/app/history'
-	);
+	const backHref = $derived.by(() => {
+		// Si vinimos del historial, volver al historial
+		if (data.from === 'history') return '/app/history';
+		// Si es lectura de un perfil, volver al perfil
+		if (data.reading.owner_type === 'person' && data.reading.owner_person_id) {
+			return `/app/profiles/${data.reading.owner_person_id}`;
+		}
+		// Por defecto, ir a nueva lectura
+		return '/app/new-reading';
+	});
 
 	const newHref = $derived.by(() =>
 		data.reading.owner_type === 'person' && data.reading.owner_person_id
@@ -95,8 +100,10 @@
 	}
 
 	function detectArcangel(item: (typeof items)[number] | undefined) {
-		const path = item?.snapshot?.card?.image_path ?? '';
-		const name = item?.snapshot?.card?.name ?? '';
+		// Nuevo formato: card_image_path y card_name directo en snapshot
+		// Formato anterior: snapshot.card.image_path y snapshot.card.name
+		const path = item?.snapshot?.card_image_path ?? item?.snapshot?.card?.image_path ?? '';
+		const name = item?.snapshot?.card_name ?? item?.snapshot?.card?.name ?? '';
 
 		const candidates = [slugify(path), slugify(slugFromPath(path)), slugify(name)];
 		for (const candidate of candidates) {
@@ -181,7 +188,9 @@
 	}
 
 	function frontImageFor(item: (typeof items)[number] | undefined) {
-		const path = item?.snapshot?.card?.image_path;
+		// Nuevo formato: card_image_path directo en snapshot
+		// Formato anterior: snapshot.card.image_path
+		const path = item?.snapshot?.card_image_path ?? item?.snapshot?.card?.image_path;
 		if (path && data.signedUrls[path]) return data.signedUrls[path];
 		const slug = detectArcangel(item);
 		if (slug) return `/cards/${ensureArcangelPrefix(slug.replace(/^arcangel-/, ''))}.png`;

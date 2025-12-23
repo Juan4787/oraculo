@@ -72,12 +72,14 @@ export const load = async ({ locals, params, url }) => {
 	if (readingError) throw error(500, readingError.message);
 	if (!reading) throw error(404, 'Lectura no encontrada');
 
-	const imagePaths = (reading.reading_items ?? []).map((it) => it.snapshot?.card?.image_path ?? null);
+	// Soportar nuevo formato (card_image_path) y antiguo (card.image_path)
+	const imagePaths = (reading.reading_items ?? []).map((it) => it.snapshot?.card_image_path ?? it.snapshot?.card?.image_path ?? null);
 	const signedUrls = await createSignedUrlMap(locals.supabase, 'card_images', imagePaths);
 
 	return {
 		reading,
 		signedUrls,
-		fresh: url.searchParams.get('fresh') === '1'
+		fresh: url.searchParams.get('fresh') === '1',
+		from: url.searchParams.get('from')
 	};
 };

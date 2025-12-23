@@ -2,7 +2,10 @@
 type Reading = {
 	id: string;
 	created_at: string;
+	owner_type: 'user' | 'person';
+	owner_person_id: string | null;
 	spreads: { name: string; card_count: number } | null;
+	persons: { name: string } | null;
 	reading_items: Array<{ position_index: number; snapshot: any }> | null;
 };
 
@@ -31,7 +34,7 @@ function makePlaceholder(label: string) {
 	);
 }
 
-const displayedReadings = $derived(() => {
+const displayedReadings = $derived.by(() => {
 	const base = [...(data.readings ?? [])];
 	const filtered = base.filter((reading) => {
 		const cards = reading.spreads?.card_count ?? reading.reading_items?.length ?? 0;
@@ -56,11 +59,11 @@ $effect(() => {
 });
 
 function previewItems(reading: Reading) {
+	const count = reading.spreads?.card_count ?? reading.reading_items?.length ?? 0;
 	const base = (reading.reading_items ?? [])
 		.slice()
 		.sort((a, b) => a.position_index - b.position_index)
-		.slice(0, 3);
-	while (base.length < 3) base.push({ position_index: base.length + 1, snapshot: {} });
+		.slice(0, count);
 	return base;
 }
 
@@ -80,10 +83,17 @@ function summaryTitles(reading: Reading) {
 	return (reading.reading_items ?? [])
 		.slice()
 		.sort((a, b) => a.position_index - b.position_index)
-		.map((it) => it.snapshot?.card?.name)
+		.map((it) => it.snapshot?.card_name ?? it.snapshot?.card?.name)
 		.filter(Boolean)
 		.slice(0, 5)
 		.join(' · ');
+}
+
+function ownerLabel(reading: Reading) {
+	if (reading.owner_type === 'person' && reading.persons?.name) {
+		return reading.persons.name;
+	}
+	return 'Yo';
 }
 </script>
 
@@ -181,12 +191,12 @@ function summaryTitles(reading: Reading) {
 							role="link"
 							tabindex="0"
 							onclick={() => {
-								location.href = `/app/readings/${reading.id}`;
+								location.href = `/app/readings/${reading.id}?from=history`;
 							}}
 							onkeydown={(event) => {
 								if (event.key === 'Enter' || event.key === ' ') {
 									event.preventDefault();
-									location.href = `/app/readings/${reading.id}`;
+									location.href = `/app/readings/${reading.id}?from=history`;
 								}
 							}}
 						>
@@ -194,32 +204,36 @@ function summaryTitles(reading: Reading) {
 								<div class="flex items-start justify-between gap-3">
 									<div class="min-w-0 space-y-2">
 										<div class="history-eyebrow">
-											<span class="history-pill">{spreadLabel(reading)}</span>
-											<span class="history-dot">•</span>
-											<span>{dtf.format(new Date(reading.created_at))}</span>
-										</div>
-										<div class="history-title">
-											{summaryTitles(reading) || 'Lectura sin título'}
-										</div>
-										<div class="history-meta">
-											<span>{cardCount(reading) === 1 ? 'Lectura rápida' : 'Lectura profunda'}</span>
-											<span class="history-dot">•</span>
-											<span>{cardCount(reading)} carta{cardCount(reading) === 1 ? '' : 's'}</span>
-										</div>
+									<span class="history-pill">{spreadLabel(reading)}</span>
+									<span class="history-dot">•</span>
+									<span>{dtf.format(new Date(reading.created_at))}</span>
+									<span class="history-dot">•</span>
+									<span class="font-medium">{ownerLabel(reading)}</span>
+								</div>
+								<div class="history-title">
+									{summaryTitles(reading) || 'Lectura sin título'}
+								</div>
+								<div class="history-meta">
+									<span>{cardCount(reading) === 1 ? 'Lectura rápida' : 'Lectura profunda'}</span>
+									<span class="history-dot">•</span>
+									<span>{cardCount(reading)} carta{cardCount(reading) === 1 ? '' : 's'}</span>
+								</div>
 									</div>
 									<div class="history-thumbs" aria-hidden="true">
-										{#each previewItems(reading) as item, idx}
-											<img
-												class="history-thumb"
-												style={`--i:${idx};`}
-												alt={item.snapshot?.card?.name ?? 'Carta'}
-												src={item.snapshot?.card?.image_path && data.signedUrls[item.snapshot.card.image_path]
-													? data.signedUrls[item.snapshot.card.image_path]
-													: makePlaceholder(`Carta ${item.position_index ?? idx + 1}`)}
-												loading="lazy"
-											/>
-										{/each}
-									</div>
+								{#each previewItems(reading) as item, idx}
+									{@const imagePath = item.snapshot?.card_image_path ?? item.snapshot?.card?.image_path}
+									{@const cardName = item.snapshot?.card_name ?? item.snapshot?.card?.name ?? 'Carta'}
+									<img
+										class="history-thumb"
+										style={`--i:${idx};`}
+										alt={cardName}
+										src={imagePath && data.signedUrls[imagePath]
+											? data.signedUrls[imagePath]
+											: makePlaceholder(`Carta ${item.position_index ?? idx + 1}`)}
+										loading="lazy"
+									/>
+								{/each}
+							</div>
 								</div>
 
 								<div class="history-footer">
@@ -232,7 +246,7 @@ function summaryTitles(reading: Reading) {
 									<div class="flex items-center gap-2">
 										<a
 											class="ghost-button"
-											href={`/app/readings/${reading.id}`}
+											href={`/app/readings/${reading.id}?from=history`}
 											onclick={(event) => event.stopPropagation()}
 										>
 											Abrir
@@ -240,7 +254,7 @@ function summaryTitles(reading: Reading) {
 										<details class="action-menu" onclick={(event) => event.stopPropagation()}>
 											<summary aria-label="Más acciones">⋯</summary>
 											<div class="action-menu-panel">
-												<a href={`/app/readings/${reading.id}`}>Ver lectura</a>
+												<a href={`/app/readings/${reading.id}?from=history`}>Ver lectura</a>
 												<a href="/app/new-reading">Repetir tirada</a>
 											</div>
 										</details>

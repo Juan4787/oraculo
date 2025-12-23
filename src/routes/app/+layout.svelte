@@ -7,14 +7,12 @@
 
 	const navBase = [
 		{ href: '/app/new-reading', label: 'Nueva lectura', icon: '📜' },
-		{ href: '/app/history', label: 'Historial', icon: '🗂️' }
+		{ href: '/app/history', label: 'Historial', icon: '🗂️' },
+		{ href: '/app/profiles', label: 'Perfiles', icon: '👥' }
 	] as const;
 
 	const isAdmin = $derived.by(() => data.role === 'owner' || data.role === 'staff');
-	const navPeople = $derived.by(() =>
-		isAdmin ? [{ href: '/app/admin/persons', label: 'Perfiles', icon: '👥' }] : []
-	);
-			const navAll = $derived.by(() => [...navBase, ...navPeople]);
+	const navAll = $derived.by(() => [...navBase]);
 
 	const isFocus = $derived($page.url.pathname.startsWith('/app/readings/'));
 

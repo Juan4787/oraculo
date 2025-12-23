@@ -6,7 +6,10 @@ import { demoBackPool, makeDemoSignedUrls, pickRandomDemoBacksWithSeed } from '$
 type ReadingListRow = {
 	id: string;
 	created_at: string;
+	owner_type: 'user' | 'person';
+	owner_person_id: string | null;
 	spreads: { name: string; card_count: number } | null;
+	persons: { name: string } | null;
 	reading_items: Array<{ position_index: number; snapshot: unknown }> | null;
 };
 
@@ -51,10 +54,12 @@ export const load = async ({ locals, url }) => {
 	const before = url.searchParams.get('before');
 	const limit = 20;
 
+	console.log('[history] Loading readings for workspace:', locals.workspaceId);
+
 	let query = locals.supabase
 		.from('readings')
-		.select('id, created_at, spreads(name, card_count), reading_items(position_index, snapshot)')
-		.eq('owner_type', 'user');
+		.select('id, created_at, owner_type, owner_person_id, spreads(name, card_count), persons(name), reading_items(position_index, snapshot)')
+		.eq('workspace_id', locals.workspaceId);
 
 	if (before) query = query.lt('created_at', before);
 
@@ -62,6 +67,9 @@ export const load = async ({ locals, url }) => {
 		.order('created_at', { ascending: false })
 		.limit(limit)
 		.returns<ReadingListRow[]>();
+
+	console.log('[history] Query result:', readings?.length ?? 0, 'readings, error:', readingsError?.message);
+
 	if (readingsError) throw error(500, readingsError.message);
 
 	const imagePaths: Array<string | null> = [];
@@ -69,7 +77,8 @@ export const load = async ({ locals, url }) => {
 		const items = reading.reading_items ?? [];
 		for (const item of items) {
 			const snapshot = item.snapshot as any;
-			imagePaths.push(snapshot?.card?.image_path ?? null);
+			// Soportar nuevo formato (card_image_path) y antiguo (card.image_path)
+			imagePaths.push(snapshot?.card_image_path ?? snapshot?.card?.image_path ?? null);
 		}
 	}
 

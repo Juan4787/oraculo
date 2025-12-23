@@ -34,7 +34,9 @@ export const POST = async ({ locals, request }) => {
 	});
 
 	if (error) return json({ message: error.message }, { status: 400 });
-	const readingId = data?.[0]?.reading_id;
+	
+	// La función devuelve UUID directo, no array
+	const readingId = typeof data === 'string' ? data : data?.[0]?.reading_id ?? data;
 	if (!readingId) return json({ message: 'No se pudo crear la lectura' }, { status: 500 });
 
 	return json({ readingId });

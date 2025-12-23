@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	let { form } = $props();
 </script>
 
@@ -17,7 +16,7 @@
 		</div>
 	</header>
 
-	<form class="mt-6 max-w-xl space-y-4" method="POST" use:enhance>
+	<form class="mt-6 max-w-xl space-y-4" method="POST">
 		<div class="space-y-2">
 			<label class="text-sm font-medium text-zinc-800" for="name">Nombre o alias</label>
 			<input

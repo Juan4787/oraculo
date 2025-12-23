@@ -11,7 +11,6 @@ export const load = async ({ locals, url }) => {
 				{ id: 'spread-3', name: '3 cartas', card_count: 3 }
 			],
 			decks: [{ id: demoDeck.id, name: demoDeck.name }],
-			publishedCardCount: demoBackPool.length,
 			role: 'owner' as const
 		};
 	}
@@ -56,19 +55,10 @@ export const load = async ({ locals, url }) => {
 
 	if (decksError) throw error(500, decksError.message);
 
-	const { count: publishedCardCount, error: cardsCountError } = await locals.supabase
-		.from('cards')
-		.select('id', { head: true, count: 'exact' })
-		.eq('workspace_id', locals.workspaceId)
-		.eq('status', 'published');
-
-	if (cardsCountError) throw error(500, cardsCountError.message);
-
 	return {
 		person,
 		spreads: spreads ?? [],
 		decks: decks ?? [],
-		publishedCardCount: publishedCardCount ?? 0,
 		role: locals.workspaceRole
 	};
 };

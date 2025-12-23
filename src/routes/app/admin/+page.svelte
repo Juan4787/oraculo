@@ -1,7 +1,6 @@
 <script lang="ts">
 	const links = [
 		{ href: '/app/admin/decks', label: 'Mazos' },
-		{ href: '/app/admin/cards', label: 'Cartas' },
 		{ href: '/app/admin/spreads', label: 'Tiradas' }
 	];
 </script>

@@ -17,7 +17,6 @@
 			<a
 				class="cta-glow w-full rounded-xl bg-zinc-900 px-4 py-2 text-center text-sm font-semibold text-white shadow-soft transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/20"
 				href="/app/new-reading"
-				data-sveltekit-reload
 			>
 				Nueva lectura
 			</a>
@@ -31,7 +30,6 @@
 			<a
 				class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-800 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
 				href="/app/history"
-				data-sveltekit-reload
 			>
 				Ir a historial
 			</a>
@@ -46,7 +44,6 @@
 				<a
 					class="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-800 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
 					href="/app/admin/persons"
-					data-sveltekit-reload
 				>
 					Ver perfiles
 				</a>

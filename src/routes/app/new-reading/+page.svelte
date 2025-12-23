@@ -11,7 +11,6 @@ let { data } = $props<{
 		person: { id: string; name: string } | null;
 		spreads: Spread[];
 		decks: Deck[];
-		publishedCardCount: number;
 		role: 'owner' | 'staff' | 'client' | null;
 	};
 }>();
@@ -118,23 +117,6 @@ function spreadLabel() {
 		</div>
 	</header>
 
-	{#if data.publishedCardCount === 0}
-		<div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-			<div class="font-semibold">No hay cartas publicadas.</div>
-			<div class="mt-1">
-				Publicá al menos 1 carta para habilitar lecturas.
-			</div>
-			{#if data.role === 'owner' || data.role === 'staff'}
-				<a
-					class="mt-3 inline-flex rounded-xl bg-zinc-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-zinc-800"
-					href="/app/admin/cards"
-				>
-					Ir a Cartas
-				</a>
-			{/if}
-		</div>
-	{/if}
-
 	<div class="mt-6 space-y-6">
 			<section class="space-y-4">
 			<h2 class="section-label text-xs font-semibold uppercase tracking-[0.14em]">
@@ -221,7 +203,7 @@ function spreadLabel() {
 	<div class="sticky bottom-24 mt-8 rounded-2xl bg-[hsla(var(--surface)/0.75)] pb-[env(safe-area-inset-bottom)] pt-3 backdrop-blur md:bottom-0">
 		<button
 			class="cta-glow w-full rounded-2xl bg-zinc-900 px-5 py-4 text-base font-semibold text-white shadow-soft transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900/20 disabled:opacity-60"
-			disabled={loading || data.publishedCardCount === 0 || !selectedSpreadId}
+			disabled={loading || !selectedSpreadId}
 			type="button"
 			onclick={() => {
 				void tirar();

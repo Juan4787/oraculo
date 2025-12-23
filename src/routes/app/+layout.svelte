@@ -112,6 +112,7 @@
 								<a
 									class="block rounded-lg px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:text-[color:hsl(var(--text))]"
 									href="/app/master"
+									data-sveltekit-reload
 									onclick={() => (userMenuOpen = false)}
 								>
 									Panel maestro
@@ -121,6 +122,7 @@
 								<a
 									class="block rounded-lg px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:text-[color:hsl(var(--text))]"
 									href="/app/admin"
+									data-sveltekit-reload
 									onclick={() => (userMenuOpen = false)}
 								>
 									Modo creador
@@ -129,6 +131,7 @@
 							<a
 								class="block rounded-lg px-3 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 dark:text-[color:hsl(var(--text))]"
 								href="/logout"
+								data-sveltekit-reload
 							>
 								Cerrar sesión
 							</a>
@@ -149,6 +152,7 @@
 						<a
 							class={`nav-link ${String($page.url.pathname) === item.href ? 'nav-link-active' : ''}`}
 							href={item.href}
+							data-sveltekit-reload
 						>
 							{#if item.icon}<span aria-hidden="true">{item.icon}</span>{/if}
 							{item.label}
@@ -171,6 +175,7 @@
 					<a
 						class={`nav-link text-center text-xs font-medium ${String($page.url.pathname) === item.href ? 'nav-link-active' : ''}`}
 						href={item.href}
+						data-sveltekit-reload
 					>
 						{#if item.icon}<span aria-hidden="true">{item.icon}</span>{/if}
 						{item.label}

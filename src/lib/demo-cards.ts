@@ -62,14 +62,32 @@ const demoBackOptions: Record<string, string[]> = {
 		'/cards/arcangel-rafael-reverso.png',
 		'/cards/message-rafael-1.png',
 		'/cards/message-rafael-2.png',
-		'/cards/message-rafael-3.png'
+		'/cards/message-rafael-3.png',
+		'/cards/message-rafael-4.png',
+		'/cards/message-rafael-5.png',
+		'/cards/message-rafael-6.png'
 	],
-	'arcangel-gabriel': ['/cards/arcangel-gabriel-reverso.png', '/cards/message-gabriel-1.png'],
+	'arcangel-gabriel': [
+		'/cards/arcangel-gabriel-reverso.png',
+		'/cards/message-gabriel-1.png',
+		'/cards/message-gabriel-2.png',
+		'/cards/message-gabriel-3.png'
+	],
+	'arcangel-miguel': [
+		'/cards/arcangel-miguel-reverso.png',
+		'/cards/message-miguel-1.png',
+		'/cards/message-miguel-2.png'
+	],
 	'arcangel-uriel': [
 		'/cards/arcangel-uriel-reverso.png',
 		'/cards/arcangel-uriel-reverso-2.png',
 		'/cards/message-uriel-1.png',
-		'/cards/message-uriel-2.png'
+		'/cards/message-uriel-2.png',
+		'/cards/message-uriel-3.png'
+	],
+	'arcangel-metatron': [
+		'/cards/arcangel-metatron-reverso.png',
+		'/cards/message-metatron-1.png'
 	]
 };
 

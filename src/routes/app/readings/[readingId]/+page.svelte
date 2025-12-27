@@ -54,17 +54,34 @@
 			'/cards/arcangel-rafael-reverso.png',
 			'/cards/message-rafael-1.png',
 			'/cards/message-rafael-2.png',
-			'/cards/message-rafael-3.png'
+			'/cards/message-rafael-3.png',
+			'/cards/message-rafael-4.png',
+			'/cards/message-rafael-5.png',
+			'/cards/message-rafael-6.png'
 		],
-		'arcangel-gabriel': ['/cards/arcangel-gabriel-reverso.png', '/cards/message-gabriel-1.png'],
-		'arcangel-miguel': ['/cards/arcangel-miguel-reverso.png'],
+		'arcangel-gabriel': [
+			'/cards/arcangel-gabriel-reverso.png',
+			'/cards/message-gabriel-1.png',
+			'/cards/message-gabriel-2.png',
+			'/cards/message-gabriel-3.png'
+		],
+		'arcangel-miguel': [
+			'/cards/arcangel-miguel-reverso.png',
+			'/cards/message-miguel-1.png',
+			'/cards/message-miguel-2.png'
+		],
 		'arcangel-uriel': [
 			'/cards/arcangel-uriel-reverso.png',
 			'/cards/arcangel-uriel-reverso-2.png',
 			'/cards/message-uriel-1.png',
-			'/cards/message-uriel-2.png'
+			'/cards/message-uriel-2.png',
+			'/cards/message-uriel-3.png'
 		],
-		'arcangel-metatron': ['/cards/arcangel-metatron-reverso.png', '/cards/arcangel-metatron.png']
+		'arcangel-metatron': [
+			'/cards/arcangel-metatron-reverso.png',
+			'/cards/arcangel-metatron.png',
+			'/cards/message-metatron-1.png'
+		]
 	};
 
 	function slugify(value: string) {
@@ -117,10 +134,25 @@
 		return '';
 	}
 
+	function hashSeed(value: string) {
+		let hash = 0x811c9dc5;
+		for (let i = 0; i < value.length; i++) {
+			hash ^= value.charCodeAt(i);
+			hash = Math.imul(hash, 0x01000193);
+		}
+		return hash >>> 0;
+	}
+
+	function pickIndex(seed: string, size: number) {
+		if (!size) return 0;
+		return hashSeed(seed) % size;
+	}
+
 	// Asigna una imagen de reverso por carta, evitando repeticiones cuando hay opciones.
 	const assignedBacks = $derived.by(() => {
 		const assignment: Record<number, string> = {};
 		const used = new Set<string>();
+		const baseSeed = data.reading.id ?? '';
 
 		for (const item of items) {
 			const slug = detectArcangel(item);
@@ -129,7 +161,7 @@
 
 			const available = pool.filter((p) => !used.has(p));
 			const pickFrom = available.length ? available : pool;
-			const idx = item.position_index % pickFrom.length;
+			const idx = pickIndex(`${baseSeed}:${slug}:${item.position_index}`, pickFrom.length);
 			const picked = pickFrom[idx];
 
 			assignment[item.position_index] = picked;
